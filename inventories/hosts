@@ -1,6 +1,3 @@
 # sample hosts
-[vagrant]
-192.168.3.33
-
-[aws]
-8.8.8.8
+[sonarqube]
+44.207.1.231 

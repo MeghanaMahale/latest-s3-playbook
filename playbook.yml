@@ -1,26 +1,61 @@
 ---
-- hosts: '{{ hosts }}'
-  remote_user: '{{ user }}'
-  sudo: yes
+- hosts: sonarqube
+  remote_user: root
+  gather_facts: false
   vars_files:
     - vars/vars.yml
-  
-  pre_tasks:
-  - name: apt-get update
-    apt: update_cache=yes
-    
-  - name: AWS | install python-pip
-    action: apt pkg={{ item }} state=installed
+  tasks:
+    # - name: pip
+    #state: latest
+
+  - name: Check for Python
+    raw: test -e /usr/bin/python
+    changed_when: false
+    failed_when: false
+    register: check_python
+
+  - name: install python3
+    apt:
+       name: python3
+       state: present
+    when: check_python.rc != 0
+
+  - name: Install package dependencies.
+    package: name={{ item }} state=present
     with_items:
-    - python-pip
+     - python3
+     - unzip
 
-  - name: AWS | install awscli
-    pip: name=awscli
+  - name: Download the awscli bundle.
+    get_url: url=https://s3.amazonaws.com/aws-cli/awscli-bundle.zip dest=/tmp/awscli-bundle.zip
+    register: aws_cli_download_bundle
 
-  - name: AWS | Assures dir exists
+  - name: Unarchive the installer.
+    unarchive: src=/tmp/awscli-bundle.zip dest=/tmp copy=no creates=/tmp/awscli-bundle
+    when: aws_cli_download_bundle.changed
+    register: aws_cli_unarchive_installer
+
+  - name: Install awscli package.
+    shell: python3 /tmp/awscli-bundle/install -i /usr/local/aws -b /usr/bin/aws
+    args:
+       creates: /usr/bin/aws
+    when: aws_cli_unarchive_installer.changed
+
+  - name: :AWS | Assures dir exists
     file: path="~/.aws" state=directory
 
-  - name: AWS | create credentials
-    template:
-      src: aws_credentials.tpl
-      dest: "~/.aws/credentials"
+  - name: Configure AWS.
+    shell: aws configure set {{ item.key }} {{ item.value }} --profile {{ aws_profile }}
+      #no_log:   true
+    with_dict:
+       aws_access_key_id: "{{ aws_access_key }}"
+       aws_secret_access_key: "{{ aws_secret_key }}"
+       region: "{{ aws_default_region }}"
+       format: "{{ aws_format }}"
+    become_user: "{{ aws_system_user }}"
+    changed_when: false
+
+      #- name: Configure AWS.
+      #template:
+      #src: aws_credentials.tpl
+      #dest: "~/.aws/credentials"
