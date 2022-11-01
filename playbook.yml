@@ -5,20 +5,28 @@
   vars_files:
     - vars/vars.yml
   tasks:
-    # - name: pip
-    #state: latest
-
   - name: Check for Python
     raw: test -e /usr/bin/python
     changed_when: false
     failed_when: false
     register: check_python
 
-  - name: install python3
+  - name: install python
     apt:
        name: python3
        state: present
     when: check_python.rc != 0
+
+  - name: Install Python pip
+    apt: name={{ item }} update_cache=true state=present force_apt_get=yes
+    with_items:
+     - python3-pip
+    become: true
+
+  - name: "install boto3"
+    pip:
+       name: boto3 
+       executable: pip3
 
   - name: Install package dependencies.
     package: name={{ item }} state=present
@@ -26,6 +34,7 @@
      - python3
      - unzip
 
+  
   - name: Download the awscli bundle.
     get_url: url=https://s3.amazonaws.com/aws-cli/awscli-bundle.zip dest=/tmp/awscli-bundle.zip
     register: aws_cli_download_bundle
@@ -55,7 +64,24 @@
     become_user: "{{ aws_system_user }}"
     changed_when: false
 
-      #- name: Configure AWS.
-      #template:
-      #src: aws_credentials.tpl
-      #dest: "~/.aws/credentials"
+  - name: create s3 bucket
+    amazon.aws.s3_bucket:
+       name: jenkins222
+          #state: present
+       region: us-east-1
+       aws_access_key: "{{ aws_access_key }}"
+       aws_secret_key: "{{ aws_secret_key }}"
+  
+  - name: Upload/PUT file to S3 bucket
+    amazon.aws.aws_s3:
+      bucket: jenkins222
+      profile: default
+      mode: put
+      object: "script"
+      src: "/root/script"
+    register: putresult
+
+  - debug: msg="{{ putresult.msg }} and the S3 Object URL is {{putresult.url}}"
+    when: putresult.changed
+
+

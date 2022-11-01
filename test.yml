@@ -1,0 +1,14 @@
+---
+- name: create s3 bucket
+  hosts: sonarqube
+  connection: local
+  vars_files:
+     - vars.yml
+  tasks: 
+     - amazon.aws.s3_bucket:
+        name: 123test
+        state: present
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: us-east-1
+    
