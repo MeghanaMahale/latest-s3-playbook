@@ -1,8 +1,0 @@
----
-aws_system_user: root
-aws_profile: default
-aws_access_key: AKIATHXJB6LQR6DGAJ4F
-aws_secret_key: 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
-aws_default_region: us-east-1 
-aws_format: table
-

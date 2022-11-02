@@ -1,14 +1,27 @@
 ---
 - name: create s3 bucket
   hosts: sonarqube
-  connection: local
   vars_files:
-     - vars.yml
+    - awscredentials.yml
+    - bucketdetails.yml
   tasks: 
-     - amazon.aws.s3_bucket:
-        name: 123test
-        state: present
-        aws_access_key: "{{ aws_access_key }}"
-        aws_secret_key: "{{ aws_secret_key }}"
-        region: us-east-1
+    - name: create s3 bucket
+      s3:
+       aws_access_key: "{{ aws_access_key }}"
+       aws_secret_key: "{{ aws_secret_key }}"
+       region: "{{ aws_default_region }}"
+       bucket: "{{ bucketname }}"
+       state: present
+         #aws_access_key: "{{ aws_access_key }}"
+         #aws_secret_key: "{{ aws_secret_key }}"
+         #region: "{{ aws_default_region }}"
+       mode: create
+
+    - name: Upload backup file to s3
+      s3:
+       name: "{{ bucketname }}"
+       object: "{{ file }}"
+       src: "{{ path }}"
+       mode: put
+
     
