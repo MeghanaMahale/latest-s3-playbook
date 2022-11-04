@@ -4,7 +4,17 @@ Ansible playbook to install AWS CLI on Ubuntu 14.04. Should work on most other v
 ## Setup
 - Clone or download the repo to your Ansible machine
 - Add your host information within `inventories/hosts`
-- Add your AWS creditentials and bucket details within `vars/awscredentials.yml`
+- Add your AWS credentials and bucket details within `vars/awscredentials.yml`
+
+## Aws credentials setup
+- You need two things basically `aws_access_key_id` & `aws_secret_key` and you find these credentials into aws console.
+- So , you can navigate to aws console at right corner to your profile --> `Security credentials` ---> `access keys` ---> create new access key/refer to pervious key.
+- Make sure you keep on updating the key to avoid (403) forbidden error.
+
+## Bucket details
+- Make sure you give a unique bucket name which starts with no. or alphabet .Avoid using capital letters.
+- object is the name os the file that you want to upload to s3 bucket
+- And src is the path of your object file that you want to upload into s3 bucket.
 
 ## Run Playbook
 Below is how I prefer to run Ansible playbooks.
